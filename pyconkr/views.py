@@ -105,7 +105,7 @@ class SpeakerUpdate(UpdateView):
 
 class ProgramList(ListView):
     model = ProgramCategory
-    template_name = "pyconkr/program_list.html"
+    template_name = 'pyconkr/program_list.html'
 
 
 class ProgramDetail(DetailView):
@@ -180,11 +180,12 @@ def login_req(request, token):
     time_threshold = datetime.now() - timedelta(hours=1)
 
     try:
-        token = EmailToken.objects.get(token=token,
-                                       created__gte=time_threshold)
+        token = EmailToken.objects.get(token=token, created__gte=time_threshold)
     except ObjectDoesNotExist:
-        return render(request, 'login_notvalidtoken.html',
-                      {'title': _('Not valid token')})
+        return render(request, 'login_notvalidtoken.html', {
+            'title': _('Not valid token')
+        })
+
     email = token.email
 
     # Create user automatically by email as id, token as password
@@ -224,8 +225,8 @@ def profile(request):
 def registration_info(request):
     is_ticket_open = is_registration_time()
     return render(request, 'pyconkr/registration/info.html', {
-            "is_ticket_open" : is_ticket_open
-        })
+        "is_ticket_open" : is_ticket_open
+    })
 
 
 @login_required
@@ -243,8 +244,6 @@ def registration_status(request):
 
 @login_required
 def registration_payment(request):
-    max_ticket_limit = settings.MAX_TICKET_NUM
-
     if not is_registration_time():
         return redirect('registration_info')
 
@@ -277,7 +276,7 @@ def registration_payment(request):
         # TODO : more form validation
         # eg) merchant_uid
         if not form.is_valid():
-            form_errors_string = "\n".join(('%s:%s' % (k, v[0]) for k, v in form.errors.items()))
+            form_errors_string = '\n'.join(('%s:%s' % (k, v[0]) for k, v in form.errors.items()))
             return render_json({
                 'success': False,
                 'message': form_errors_string,  # TODO : ...
@@ -367,12 +366,13 @@ def registration_payment_callback(request):
         return render_io_error('amount is not product.price')
 
     remain_ticket_count = (settings.MAX_TICKET_NUM - Registration.objects.filter(payment_status='paid').count())
-    if  remain_ticket_count <= 0:
-        # Cancel
+    if remain_ticket_count <= 0:
+        # TODO : cancel
         return render_json({
             'success': False,
-            'message': u"티켓이 매진 되었습니다"
+            'message': u'티켓이 매진 되었습니다'
         })
+
     registration = Registration.objects.filter(merchant_uid=merchant_uid).get()
     registration.payment_status = 'paid'
     registration.save()
@@ -389,7 +389,4 @@ def is_registration_time():
     ticket_close_date = datetime.strptime(settings.TICKET_CLOSE_DATETIME, '%Y-%m-%d %H:%M:%S')
     cur = datetime.now()
 
-    if ticket_open_date <= cur and ticket_close_date >= cur:
-        return True
-    else:
-        return False
+    return ticket_open_date <= cur <= ticket_close_date
