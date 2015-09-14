@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+    python binding for korean payment service provider I'mport(http://www.iamport.kr)
+
+    token = get_access_token(API_KEY, API_SECRET)
+    iamporter = Iamporter(token)
+    result = iamporter.onetime({
+    })
+    iamporter.find_by_merchant_uid(merchant_uid)
+    iamporter.cancel(merchant_uid)
+"""
 import requests
 
 
@@ -9,6 +19,9 @@ class IamporterError(Exception):
 
 
 def get_access_token(api_key, api_secret):
+    """
+    Get an access token for I'mport
+    """
     url = 'https://api.iamport.kr/users/getToken'
     response = requests.post(url, data=dict(
         imp_key=api_key,
@@ -18,7 +31,6 @@ def get_access_token(api_key, api_secret):
     if response.status_code != 200:
         raise IOError  # TODO
 
-    # TODO : validate expire time
     result = response.json()
 
     if result['code'] is not 0:
@@ -28,6 +40,9 @@ def get_access_token(api_key, api_secret):
 
 
 class Iamporter(object):
+    """
+    I'mport client
+    """
     TOKEN_HEADER = 'X-ImpTokenHeader'
 
     def __init__(self, access_token):
@@ -67,6 +82,9 @@ class Iamporter(object):
         return self._parse_response(response)
 
     def onetime(self, **params):
+        """
+        request a payment
+        """
         url = 'https://api.iamport.kr/subscribe/payments/onetime/'
         keys = ['token', 'merchant_uid', 'amount', 'vat', 'card_number', 'expiry', 'birth', 'pwd_2digit',
                 'remember_me', 'customer_uid', 'buyer_name', 'buyer_email', ]
@@ -78,3 +96,9 @@ class Iamporter(object):
         url = 'https://api.iamport.kr/payments/find/{merchant_uid}'.format(merchant_uid=merchant_uid)
 
         return self._get(url)
+
+    def cancel(self, merchant_uid):
+        """
+        cancel a exist transaction
+        """
+        raise NotImplemented
